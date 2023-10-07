@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+<head>
+    <meta charset=utf-8>
+    <title>Three.js Hello app</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { width: 100%; height: 100% }
+    </style>
+</head>
+
+<body>
+
+<script type="importmap">
+{
+    "imports": {
+        "three": "./js/build/three.module.js",
+        "imageSource": "./images/door.jpg"
+    }
+}
+</script>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { TrackballControls } from './js/examples/jsm/controls/TrackballControls.js';
+
+    let WIDTH, HEIGHT, aspectRatio;
+    let renderer;
+    let scene, camera;
+    let geometry, material, mesh;
+    let controls = null;
+
+    init();
+    animate();
+
+    function init() {
+        HEIGHT = window.innerHeight;
+        WIDTH = window.innerWidth;
+        aspectRatio = WIDTH / HEIGHT;
+
+        renderer = new THREE.WebGLRenderer( { antialias: true } );
+        renderer.setSize( WIDTH, HEIGHT );
+        renderer.setClearColor( 0x000000 );
+        document.body.appendChild( renderer.domElement );
+
+        scene = new THREE.Scene();
+
+        camera = new THREE.PerspectiveCamera( 75, aspectRatio, 0.1, 1000 );
+        camera.position.z = 15;
+        camera.lookAt( scene.position.x, scene.position.y, scene.position.z );
+
+        controls = new TrackballControls( camera, renderer.domElement );
+        controls.rotateSpeed = 5.0;
+        controls.panSpeed = 1.0;
+
+        geometry = new THREE.BoxGeometry( 20, 20, 1 );
+        material = new THREE.MeshBasicMaterial( { color: 0xbfa491 } );
+        mesh = new THREE.Mesh( geometry, material );
+
+        const edges = new THREE.EdgesGeometry( geometry ); 
+        const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial( { color: 0xffffff } ) ); 
+        scene.add( line );
+
+        let rightWallGeometry = new THREE.BoxGeometry( 20, 20, 1 );
+        let rightWall = new THREE.Mesh( rightWallGeometry, material );
+
+        const rightWallEdges = new THREE.EdgesGeometry( rightWallGeometry ); 
+        const rightWallLine = new THREE.LineSegments(rightWallEdges, new THREE.LineBasicMaterial( { color: 0xffffff } ) ); 
+        scene.add( rightWallLine );
+
+        rightWall.rotation.y = Math.PI / 2;
+
+        rightWall.position.z = 10.5;
+
+        rightWall.position.x = 10.5;
+
+        
+
+        let ceilingGeometry = new THREE.BoxGeometry( 20, 20, 1 );
+        let ceiling = new THREE.Mesh( ceilingGeometry, material );
+
+        let ceilingEdges = new THREE.EdgesGeometry( ceilingGeometry );
+        let ceilingLine = new THREE.LineSegments(ceilingEdges, new THREE.LineBasicMaterial( { color: 0xffffff } ) );
+        
+
+        ceiling.position.z = 10.5;
+
+        ceiling.position.y = 10.5;
+        ceiling.rotation.x = Math.PI / 2;
+
+        scene.add( ceiling );
+        scene.add( ceilingLine );
+
+        let textureLoader = new THREE.TextureLoader();
+        let floorTexture = textureLoader.load('./images/floor.jpg', (texture) => {
+            let floorGeometry = new THREE.BoxGeometry( 20, 20, 1 );
+            let floorMaterial = new THREE.MeshBasicMaterial();
+            floorMaterial.map = texture;
+            let floor = new THREE.Mesh( floorGeometry, floorMaterial );
+
+            let floorEdges = new THREE.EdgesGeometry( floorGeometry );
+            let floorLine = new THREE.LineSegments(floorEdges, new THREE.LineBasicMaterial( { color: 0xffffff } ) );
+            scene.add( floorLine );
+
+            floor.position.z = 10.5;
+
+            floor.position.y = -10.5;
+            floor.rotation.x = Math.PI / 2;
+
+            scene.add( floor );
+        });
+
+        textureLoader = new THREE.TextureLoader();
+        let texture = textureLoader.load( './images/door.jpg', (texture) => {
+            let doorGeometry = new THREE.BoxGeometry( 5, 10, 1.1 );
+            let doorMaterial = new THREE.MeshBasicMaterial();
+            doorMaterial.map = texture;
+            let door = new THREE.Mesh( doorGeometry, doorMaterial );
+            door.position.z = 0;
+            door.position.x = 0;
+            door.position.y = -5;
+
+            const curve = new THREE.EllipseCurve(
+                0,  0, 1,            // ax, aY
+                1, 1,           // xRadius, yRadius
+                0,  2 * Math.PI,  // aStartAngle, aEndAngle
+                false,            // aClockwise
+                0                 // aRotation
+            );
+
+            const points = curve.getPoints( 50 );
+            const holeGeometry = new THREE.BufferGeometry().setFromPoints( points );
+
+            const holeMaterial = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+
+            // Create the final object to add to the scene
+            const ellipse = new THREE.Line( holeGeometry, holeMaterial );
+
+            door.add( ellipse);
+            mesh.add( door );
+            scene.add( mesh );
+            render();
+
+        } );
+
+        let axesHelper = new THREE.AxesHelper( 12 );
+        axesHelper.position.z = 10;
+        axesHelper.position.y = -9;
+        scene.add( axesHelper );
+        
+        scene.add( rightWall );
+
+        render();
+    }
+
+    function handleWindowResize() {
+        HEIGHT = window.innerHeight;
+        WIDTH = window.innerWidth;
+        console.log( 'WIDTH=' + WIDTH + '; HEIGHT=' + HEIGHT );
+        renderer.setSize( WIDTH, HEIGHT );
+        aspectRatio = WIDTH / HEIGHT;
+        camera.aspect = aspectRatio;
+        camera.updateProjectionMatrix();
+        render();
+    }
+
+    function animate() {
+        requestAnimationFrame( animate );
+        controls.update();
+        render();
+    }
+
+    function render() {
+        renderer.render( scene, camera );
+    }
+
+</script>
+</body>
+</html>
